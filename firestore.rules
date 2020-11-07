@@ -1,0 +1,140 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+  
+    match /users/{userId} {
+    	allow read:
+      	if isAuthenticated();
+      allow create:
+      	if isAuthenticated()
+        && incomingId() == authUid()
+        && validateName()
+        && incomingData().createdAt == request.time
+        && incomingData().updatedAt == request.time;
+      allow update:
+      	if isAuthenticated()
+        && authUid() == userId
+        && isNotChanged('createdAt')
+        && incomingData().updatedAt == request.time;
+      allow delete:
+      	if isAuthenticated()
+        && authUid() == userId;
+      function validateName() {
+      	return validateString(incomingData().name, 1, 30)
+      }
+    }
+    
+    match /comments/{commentId} {
+    	allow read:
+      	if isAuthenticated();
+      allow create:
+      	if isAuthenticated()
+        && incomingData().userId == authUid()
+        && incomingData().likedCount == 0
+        && validateContextAndValidImg()
+        && incomingData().createdAt == request.time
+        && incomingData().updatedAt == request.time;
+      allow update:
+      	if isAuthenticated()
+        //&& request.auth.uid != request.resource.data.userId
+      	&& isUpdatingByVisitor()
+        && isNotChanged('createdAt')
+        && incomingData().updatedAt == request.time
+        && isNotChanged('context')
+        && isNotChanged('userId')
+        && isNotChanged('symbol');
+      function isUpdatingByVisitor() {
+        return (
+          (
+            isIncrementedField('likedCount', 1)
+              && (!exists(likedUserPath()) && existsAfter(likedUserPath()))
+              && (!exists(likeCommentPath()) && existsAfter(likeCommentPath()))
+          ) || (
+    	      isIncrementedField('likedCount', -1)
+              && (exists(likedUserPath()) && !existsAfter(likedUserPath()))
+              && (exists(likeCommentPath()) && !existsAfter(likeCommentPath()))
+          )
+        )
+      }
+      function likedUserPath() {
+        return documentPath(['comments', commentId, 'likedUsers', authUid()]);
+      }
+      function likeCommentPath() {
+        return documentPath(['users', authUid(), 'likeComments', commentId]);
+      }
+      function validateContextAndValidImg() {
+      	return !(incomingData().context == '' && incomingData().imgUrl == null);
+      }
+    }
+    
+    match /users/{userId}/likeComments/{commentId} {
+    	allow read:
+      	if isAuthenticated();
+      allow create:
+      	if isAuthenticated()
+        && userId == authUid()
+        && incomingId() == commentId
+        && incomingData().createdAt == request.time
+        && !exists(likeCommentPath())
+        && getAfter(likeCommentPath()).id == commentId;
+      allow delete:
+      	if isAuthenticated()
+        && userId == authUid()
+        && exists(likeCommentPath())
+        && !existsAfter(likeCommentPath());
+      function likeCommentPath() {
+      	return documentPath(['users', userId, 'likeComments', commentId]);
+    	}
+    }
+    
+    match /comments/{commentId}/likedUsers/{userId} {
+      allow read:
+      	if isAuthenticated();
+      allow create:
+      	if isAuthenticated()
+        && userId == authUid()
+      	&& incomingId() == userId
+        && incomingData().createdAt == request.time
+      	&& !exists(likedUserPath())
+        && getAfter(likedUserPath()).id == userId;
+    	allow delete:
+      	if isAuthenticated()
+        && userId == authUid()
+        && exists(likedUserPath())
+        && !existsAfter(likedUserPath());
+      function likedUserPath() {
+        return documentPath(['comments', commentId, 'likedUsers', userId]);
+      }
+    }
+    
+  	function documentPath(paths) {
+      return path([
+        ['databases', database, 'documents'].join('/'),
+        paths.join('/')
+      ].join('/'));
+    }
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isNotChanged(key) {
+      return incomingData()[key] == resource.data[key];
+    }
+    function isIncrementedField(key, number) {
+      return incomingData()[key] == resource.data[key] + number;
+    }
+    function authUid() {
+    	return request.auth.uid;
+    }
+    function incomingId() {
+    	return request.resource.id;
+    }
+    function incomingData() {
+    	return request.resource.data;
+    }
+    function validateString(text, min, max) {
+    	return text is string
+        && min <= text.size()
+        && text.size() <= max;
+    }
+  }
+}

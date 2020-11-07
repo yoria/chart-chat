@@ -1,32 +1,67 @@
 <template>
-  <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
+  <v-app>
+    <div class="dropdown" id="symbol-dropdown" :style="style.symbolDropdown">
+      <button
+        type="button"
+        id="dropdown1"
+        class="btn btn-dark rounded-circle p-0 text-light"
+        style="width: 5rem; height: 5rem"
+        data-toggle="dropdown"
+        aria-haspopup="true"
+        aria-expanded="false"
+      >
+        Symbols
+      </button>
+      <div class="dropdown-menu" aria-labelledby="dropdown1">
+        <router-link class="dropdown-item" to="/">Chachat</router-link>
+        <div class="dropdown-divider"></div>
+
+        <div v-for="symbol in allSymbols" :key="symbol.index">
+          <router-link
+            v-if="symbol != 'divLine'"
+            class="dropdown-item"
+            :class="{ active: stock === symbol }"
+            :to="{ name: 'symbols', params: { symbol: symbol } }"
+            >{{ symbol }}</router-link
+          >
+          <div v-else class="dropdown-divider"></div>
+        </div>
+      </div>
     </div>
-    <router-view/>
-  </div>
+    <router-view />
+  </v-app>
 </template>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
+<script>
+export default {
+  name: "App",
 
-#nav {
-  padding: 30px;
-}
-
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-#nav a.router-link-exact-active {
-  color: #42b983;
-}
-</style>
+  data() {
+    return {
+      allSymbols: [
+        "AAPL",
+        "MSFT",
+        "AMZN",
+        "divLine",
+        "DJI",
+        "divLine",
+        "USDJPY",
+        "EURUSD",
+        "GBPUSD",
+        "AUDUSD",
+        "divLine",
+        "XAUUSD",
+        "USOIL",
+      ],
+      style: {
+        symbolDropdown: {
+          zIndex: 1500,
+          position: "fixed",
+          top: "10px",
+          right: "10px",
+        },
+      },
+    };
+  },
+};
+</script>
