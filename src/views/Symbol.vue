@@ -25,6 +25,7 @@ import Comments from "../components/Comments.vue";
 import Chart from "../components/Chart.vue";
 import Form from "../components/Form.vue";
 import firebase from "firebase";
+
 export default {
   components: {
     Comments,
@@ -36,7 +37,7 @@ export default {
       db: firebase.firestore(),
       auth: firebase.auth(),
       user: {
-        id: "",
+        id: this.$userId,
         name: "",
       },
       stock: this.$route.params.symbol,
@@ -51,7 +52,7 @@ export default {
     $route(to) {
       Object.assign(this.$data, this.$options.data.call(this));
       this.stock = to.params.symbol;
-      console.log(this.stock);
+      //console.log(this.stock);
       this.main();
     },
   },
@@ -60,13 +61,11 @@ export default {
   },
   methods: {
     main() {
-      this.auth.signInAnonymously().catch((error) => {
-        this.error = `[error] Can not signin anonymouse (${error.code}:${error.message})`;
-      });
+      /*
       this.auth.onAuthStateChanged((user0) => {
         if (user0) {
           this.user.id = user0.uid;
-          console.log(this.user.id);
+          //console.log(this.user.id);
           this.db
             .collection("users")
             .doc(this.user.id)
@@ -79,9 +78,8 @@ export default {
             });
           this.$refs.commentsCpn.setInitialCommentList();
         }
-      });
+      });*/
       this.isSmartPhone = this.checkIsSmartPhone();
-      this.setAffiliateLinkImg();
     },
     scrollBottom() {
       const comments = document.getElementById("comments");
@@ -104,7 +102,7 @@ export default {
     },
 
     async likeComment(db, commentId, userId) {
-      console.log("likeComment");
+      //console.log("likeComment");
       const batch = db.batch();
       batch.set(
         db
@@ -129,7 +127,7 @@ export default {
       await batch.commit();
     },
     async unlikeComment(db, commentId, userId) {
-      console.log("unlikeComment");
+      //console.log("unlikeComment");
       const batch = db.batch();
       batch.delete(
         db
@@ -168,12 +166,6 @@ export default {
         ":" +
         ("0" + createdAtDate.getMinutes()).slice(-2)
       );
-    },
-    setAffiliateLinkImg() {
-      const width = document.documentElement.clientWidth;
-      console.log(width);
-      const widgetBottom = document.getElementById("widget-bottom");
-      console.log(widgetBottom);
     },
   },
 };

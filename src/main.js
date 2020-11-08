@@ -3,6 +3,7 @@ import App from './App.vue'
 import router from './router'
 import vuetify from './plugins/vuetify'
 import firebase from 'firebase'
+import './registerServiceWorker'
 
 const firebaseConfig = {
   apiKey: "AIzaSyCCZa_oNaqW8MmFHTQKZ23Ra2tRQ4W4ihk",
@@ -16,11 +17,21 @@ const firebaseConfig = {
 };
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
-
 Vue.config.productionTip = false
 
-new Vue({
-  router,
-  vuetify,
-  render: h => h(App)
-}).$mount('#app')
+firebase
+  .auth()
+  .signInAnonymously()
+  .catch((error) => {
+    this.error = `[error] Can not signin anonymouse (${error.code}:${error.message})`;
+  });
+firebase.auth().onAuthStateChanged((user) => {
+  if (user) {
+    Vue.prototype.$userId = user.uid;
+    new Vue({
+      router,
+      vuetify,
+      render: h => h(App)
+    }).$mount('#app')
+  }
+});

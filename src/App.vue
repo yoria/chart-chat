@@ -26,6 +26,9 @@
           >
           <div v-else class="dropdown-divider"></div>
         </div>
+        <div>
+          <router-link class="dropdown-item" to="/user">ユーザー</router-link>
+        </div>
       </div>
     </div>
     <router-view />
@@ -35,7 +38,6 @@
 <script>
 export default {
   name: "App",
-
   data() {
     return {
       allSymbols: [
@@ -52,6 +54,7 @@ export default {
         "divLine",
         "XAUUSD",
         "USOIL",
+        "divLine",
       ],
       style: {
         symbolDropdown: {
@@ -63,5 +66,6 @@ export default {
       },
     };
   },
+  mounted: function () {},
 };
 </script>

@@ -17,7 +17,10 @@
     </div>
   </div>
 </template>
-<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script
+      type="text/javascript"
+      src="https://s3.tradingview.com/tv.js"
+    ></script>
 <script>
 export default {
   props: ["stock"],
@@ -33,32 +36,16 @@ export default {
   },
   methods: {
     setTradingViewWidget() {
-      let language;
-      if (navigator.browserLanguage != null) {
-        // Internet Explorer, Opera
-        language = navigator.browserLanguage.substr(0, 2);
-      } else if (navigator.userLanguage != null) {
-        // Internet Explorer
-        language = navigator.userLanguage.substr(0, 2);
-      } else if (navigator.language != null) {
-        // Chrome, Firefox, Opera
-        language = navigator.language.substr(0, 2);
-      } else {
-        language = "en";
-      }
+      const lang = this.getLang();
       new TradingView.widget({
-        /*
-        "width": navigator.userAgent.match(/iPhone|Android.+Mobile/) ? document.documentElement.clientWidth : window.innerWidth * 7 / 12,
-        "height": navigator.userAgent.match(/iPhone|Android.+Mobile/) ? document.documentElement.clientHeight : window.innerHeight * 10 / 12,
-        /*"height": navigator.userAgent.match(/iPhone|Android.+Mobile/) ? window.innerWidth * 11 / 16 : window.innerHeight * 10 / 12,*/
-        width: document.documentElement.clientWidth,
-        height: document.documentElement.clientHeight,
+        width: window.innerWidth,
+        height: window.innerHeight,
         symbol: this.stock,
         interval: "1",
         timezone: "Etc/UTC",
         theme: "dark",
         style: "1",
-        locale: language,
+        locale: lang,
         toolbar_bg: "#f1f3f6",
         enable_publishing: false,
         allow_symbol_change: false,
@@ -66,6 +53,20 @@ export default {
         hide_legend: true,
         container_id: "tradingview_0685e",
       });
+    },
+    getLang() {
+      if (navigator.browserLanguage != null) {
+        // Internet Explorer, Opera
+        return navigator.browserLanguage.substr(0, 2);
+      } else if (navigator.userLanguage != null) {
+        // Internet Explorer
+        return navigator.userLanguage.substr(0, 2);
+      } else if (navigator.language != null) {
+        // Chrome, Firefox, Opera
+        return navigator.language.substr(0, 2);
+      } else {
+        return "en";
+      }
     },
   },
 };

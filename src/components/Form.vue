@@ -114,7 +114,7 @@ export default {
                 .child(`${docId}.jpg`)
                 .getDownloadURL()
                 .then((url) => {
-                  console.log(url);
+                  //console.log(url);
                   this.db.collection("comments").doc(docId).set({
                     userId: this.user.id,
                     stock: this.stock,
@@ -126,15 +126,15 @@ export default {
                     replyContext: this.reply.context,
                     imgUrl: url,
                   });
-                  console.log(imgs.files);
+                  //console.log(imgs.files);
                   this.commentContext = "";
                   this.resetFile();
                   this.$emit("releaseReplyMode");
                   this.initializeTextarea(ta);
                 })
-                .catch((error) => {
-                  console.log(error);
-                  console.log(imgs.files);
+                .catch(() => {
+                  //console.log(error);
+                  //console.log(imgs.files);
                   this.commentContext = "";
                   this.resetFile();
                   this.$emit("releaseReplyMode");
@@ -154,7 +154,7 @@ export default {
           replyContext: this.reply.context,
           imgUrl: null,
         });
-        console.log(imgs.files);
+        //console.log(imgs.files);
         this.commentContext = "";
         this.resetFile();
         this.$emit("releaseReplyMode");
@@ -189,9 +189,9 @@ export default {
       const imgs = document.getElementById("post-img");
       this.isValidContext =
         imgs.files.length > 0 || this.commentContext.trim() !== "";
-      console.log(imgs);
-      console.log(imgs.files);
-      console.log(imgs.value);
+      //console.log(imgs);
+      //console.log(imgs.files);
+      //console.log(imgs.value);
     },
     onFileChange(e) {
       const files = e.target.files;
@@ -200,7 +200,7 @@ export default {
         const reader = new FileReader();
         reader.onload = (e) => {
           this.imageData = e.target.result;
-          console.log(this.imageData);
+          //console.log(this.imageData);
         };
         reader.readAsDataURL(file);
       }

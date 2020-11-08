@@ -120,9 +120,12 @@ export default {
       },
     },
   },
+  mounted: function () {
+    this.setInitialCommentList();
+  },
   methods: {
     setInitialCommentList() {
-      console.log(this.stock);
+      //console.log(this.stock);
       this.db
         .collection("comments")
         .where("stock", "==", this.stock)
@@ -130,29 +133,29 @@ export default {
         .limit(this.commentListLimit)
         .onSnapshot((snapshot) => {
           snapshot.docChanges().sort(this.createdAtDescSort);
-          console.log("snapshot", snapshot);
+          //console.log("snapshot", snapshot);
           snapshot.docChanges().forEach((change) => {
             switch (change.type) {
               case "added":
-                console.log(change.type, change.doc.id, change.doc.data());
+                //console.log(change.type, change.doc.id, change.doc.data());
                 this.addComments(change);
                 break;
               case "modified":
-                console.log(change.type, change.doc.id, change.doc.data());
+                //console.log(change.type, change.doc.id, change.doc.data());
                 this.modifyComments(change);
                 break;
               case "removed":
-                console.log(change.type, change.doc.id, change.doc.data());
+                //console.log(change.type, change.doc.id, change.doc.data());
                 this.comments.shift();
                 break;
               default:
-                console.log("error");
+              //console.log("error");
             }
           });
         });
     },
     addComments(change) {
-      console.log(this.user.id);
+      //console.log(this.user.id);
       this.db
         .collection("users")
         .doc(this.user.id)
@@ -215,12 +218,6 @@ export default {
     },
     releaseReplyMode() {
       this.$emit("releaseReplyMode");
-    },
-    tweet(text) {
-      const url = `https://twitter.com/intent/tweet?text=${text}%0A%23Chachat%0A${encodeURIComponent(
-        location.href
-      )}`;
-      window.open(url, "twitter");
     },
   },
 };
