@@ -1,16 +1,17 @@
 <template>
   <div class="container">
     <Chart :stock="stock"></Chart>
-    <Comments
-      :stock="stock"
-      :comments="comments"
-      :createdAtStr="createdAtStr"
-      :user="user"
-      @setReplyMode="setReplyMode"
-      @releaseReplyMode="releaseReplyMode"
-      :reply="reply"
-      ref="commentsCpn"
-    ></Comments>
+    <div
+      :class="{ 'comments-mobile': isSmartPhone, 'comments-pc': !isSmartPhone }"
+    >
+      <Comments
+        :stock="stock"
+        :user="user"
+        @setReplyMode="setReplyMode"
+        @releaseReplyMode="releaseReplyMode"
+        :reply="reply"
+      ></Comments>
+    </div>
     <Form
       :stock="stock"
       :user="user"
@@ -45,6 +46,7 @@ export default {
       reply: {
         mode: false,
         context: "",
+        imgUrl: "",
       },
     };
   },
@@ -61,93 +63,17 @@ export default {
   },
   methods: {
     main() {
-      /*
-      this.auth.onAuthStateChanged((user0) => {
-        if (user0) {
-          this.user.id = user0.uid;
-          //console.log(this.user.id);
-          this.db
-            .collection("users")
-            .doc(this.user.id)
-            .get()
-            .then((data) => {
-              if (!data.exists) {
-                this.createNewUser(this.db, this.user.id);
-              }
-              this.user.name = data.data().name;
-            });
-          this.$refs.commentsCpn.setInitialCommentList();
-        }
-      });*/
       this.isSmartPhone = this.checkIsSmartPhone();
     },
-    scrollBottom() {
-      const comments = document.getElementById("comments");
-      comments.scrollTop = comments.scrollHeight - comments.clientHeight;
-    },
-    setReplyMode(context) {
+    setReplyMode(context, imgUrl) {
       this.$set(this.reply, "mode", true);
       this.$set(this.reply, "context", context);
+      this.$set(this.reply, "imgUrl", imgUrl);
     },
     releaseReplyMode() {
       this.$set(this.reply, "mode", false);
       this.$set(this.reply, "context", "");
-    },
-    createNewUser(db, userId) {
-      db.collection("users").doc(userId).set({
-        name: "名無し",
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      });
-    },
-
-    async likeComment(db, commentId, userId) {
-      //console.log("likeComment");
-      const batch = db.batch();
-      batch.set(
-        db
-          .collection("comments")
-          .doc(commentId)
-          .collection("likedUsers")
-          .doc(userId),
-        { createdAt: firebase.firestore.FieldValue.serverTimestamp() }
-      );
-      batch.set(
-        db
-          .collection("users")
-          .doc(userId)
-          .collection("likeComments")
-          .doc(commentId),
-        { createdAt: firebase.firestore.FieldValue.serverTimestamp() }
-      );
-      batch.update(db.collection("comments").doc(commentId), {
-        likedCount: firebase.firestore.FieldValue.increment(1),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      });
-      await batch.commit();
-    },
-    async unlikeComment(db, commentId, userId) {
-      //console.log("unlikeComment");
-      const batch = db.batch();
-      batch.delete(
-        db
-          .collection("comments")
-          .doc(commentId)
-          .collection("likedUsers")
-          .doc(userId)
-      );
-      batch.delete(
-        db
-          .collection("users")
-          .doc(userId)
-          .collection("likeComments")
-          .doc(commentId)
-      );
-      batch.update(db.collection("comments").doc(commentId), {
-        likedCount: firebase.firestore.FieldValue.increment(-1),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      });
-      await batch.commit();
+      this.$set(this.reply, "imgUrl", "");
     },
     checkIsSmartPhone() {
       if (navigator.userAgent.match(/iPhone|Android.+Mobile/)) {
@@ -155,17 +81,6 @@ export default {
       } else {
         return false;
       }
-    },
-    createdAtStr(createdAtDate) {
-      return (
-        ("0" + (createdAtDate.getMonth() + 1)).slice(-2) +
-        "/" +
-        createdAtDate.getDate() +
-        " " +
-        createdAtDate.getHours() +
-        ":" +
-        ("0" + createdAtDate.getMinutes()).slice(-2)
-      );
     },
   },
 };
@@ -212,5 +127,25 @@ export default {
 #affiliate-link-img {
   z-index: 2000;
   position: fixed;
+}
+.comments-mobile {
+  position: fixed;
+  top: 50px;
+  left: 10px;
+  width: 30%;
+  height: 90%;
+  overflow-y: scroll;
+  word-wrap: break-word;
+  z-index: 1100;
+}
+.comments-pc {
+  position: fixed;
+  top: 50px;
+  left: 10px;
+  width: 20%;
+  height: 90%;
+  overflow-y: scroll;
+  word-wrap: break-word;
+  z-index: 1100;
 }
 </style>

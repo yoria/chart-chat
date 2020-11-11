@@ -1,40 +1,53 @@
 <template>
   <div>
-    <div
-      class="list-unstyled"
-      id="comments"
-      :class="{ 'comments-mobile': isMobile, 'comments-pc': !isMobile }"
-    >
-      <li v-for="comment in comments" :key="comment.index" class="my-2">
-        <div
-          class="text-light"
-          id="comment-context"
-          :class="{ 'font-x-small': isMobile }"
-        >
-          {{ comment.context }}
+    <div>
+      <li
+        v-for="(comment, key) in comments"
+        :key="key"
+        class="my-2 list-unstyled"
+      >
+        <div :class="{ 'border border-warning': comment.userId === user.id }">
+          <div
+            class="text-light"
+            :class="{
+              'font-x-small': isMobile,
+            }"
+            id="comment-context"
+          >
+            {{ comment.context }}
+          </div>
+          <a :href="comment.imgUrl" :data-lightbox="comment.imgUrl">
+            <img
+              v-if="comment.imgUrl !== ''"
+              :src="comment.imgUrl"
+              width="80"
+            />
+          </a>
         </div>
+
         <div
           v-if="comment.replyMode"
-          class="text-warning"
+          class="border border-primary text-white"
           :class="{ 'font-x-small': isMobile }"
         >
           {{ comment.replyContext }}
-        </div>
-
-        <a :href="comment.imgUrl" :data-lightbox="comment.imgUrl">
           <img
-            v-if="comment.imgUrl !== null && comment.imgUrl !== undefined"
-            :src="comment.imgUrl"
-            class="col-6"
+            v-if="comment.replyImgUrl !== ''"
+            :src="comment.replyImgUrl"
+            width="80"
           />
-        </a>
+        </div>
+        <div
+          v-if="comment.createdAt"
+          class="text-secondary"
+          :class="{ 'font-x-small': isMobile }"
+        >
+          {{ getStrFromMs(comment.createdAt) }}
+        </div>
         <div
           class="d-flex justify-content-around"
           :class="{ 'font-x-small': isMobile }"
         >
-          <div v-if="comment.createdAt" class="text-secondary">
-            {{ createdAtStr(comment.createdAt) }}
-          </div>
           <div v-if="comment.context !== ''">
             <a
               v-if="isIphone"
@@ -62,19 +75,47 @@
           </div>
           <div>
             <i
-              v-if="comment.context !== ''"
               class="material-icons text-secondary"
-              @click="setReplyMode(comment.context)"
+              style="font-size: 2rem"
+              @click="setReplyMode(comment.context, comment.imgUrl)"
             >
               reply
             </i>
           </div>
+
+          <div v-if="comment.userId !== user.id">
+            <i
+              v-if="
+                Object.keys(comment).indexOf('likedUsers') === -1 ||
+                Object.keys(comment.likedUsers).indexOf(user.id) === -1
+              "
+              class="material-icons text-secondary"
+              @click="like(key, comment.likedCount)"
+              style="font-size: 1.5rem"
+            >
+              thumb_up_alt
+            </i>
+            <i
+              v-else
+              class="material-icons text-primary"
+              @click="unlike(key, comment.likedCount)"
+              style="font-size: 1.5rem"
+            >
+              thumb_up_alt
+            </i>
+            <p class="text-white">{{ comment.likedCount }}</p>
+          </div>
         </div>
       </li>
     </div>
-    <div id="reply-comment" :style="replyCommentStyle" class="my-3 bg-dark">
-      <div v-if="reply.mode" class="text-light">
-        {{ reply.context }}
+    <div
+      id="reply-comment"
+      :style="replyCommentStyle"
+      class="my-3 border border-primary"
+    >
+      <div>
+        <div class="text-light">{{ reply.context }}</div>
+        <img v-show="reply.imgUrl !== ''" :src="reply.imgUrl" width="80" />
       </div>
       <button
         v-show="reply.mode"
@@ -93,9 +134,9 @@ import firebase from "firebase";
 export default {
   data() {
     return {
-      db: firebase.firestore(),
-      comments: [],
-      commentListLimit: 50,
+      db: firebase.database(),
+      comments: {},
+      commentListLimit: 30,
       isIphone: navigator.userAgent.match(/iPhone/),
       currentUrl: encodeURIComponent(location.href),
       widgetTopBarHeight: 50,
@@ -110,7 +151,7 @@ export default {
       },
     };
   },
-  props: ["stock", "createdAtStr", "user", "reply"],
+  props: ["stock", "user", "reply"],
 
   watch: {
     stock: {
@@ -126,98 +167,63 @@ export default {
   methods: {
     setInitialCommentList() {
       //console.log(this.stock);
-      this.db
-        .collection("comments")
-        .where("stock", "==", this.stock)
-        .orderBy("createdAt", "desc")
-        .limit(this.commentListLimit)
-        .onSnapshot((snapshot) => {
-          snapshot.docChanges().sort(this.createdAtDescSort);
-          //console.log("snapshot", snapshot);
-          snapshot.docChanges().forEach((change) => {
-            switch (change.type) {
-              case "added":
-                //console.log(change.type, change.doc.id, change.doc.data());
-                this.addComments(change);
-                break;
-              case "modified":
-                //console.log(change.type, change.doc.id, change.doc.data());
-                this.modifyComments(change);
-                break;
-              case "removed":
-                //console.log(change.type, change.doc.id, change.doc.data());
-                this.comments.shift();
-                break;
-              default:
-              //console.log("error");
-            }
-          });
-        });
-    },
-    addComments(change) {
-      //console.log(this.user.id);
-      this.db
-        .collection("users")
-        .doc(this.user.id)
-        .collection("likeComments")
-        .doc(change.doc.id)
-        .get()
-        .then((data) => {
-          const createdAtInt = change.doc.data().createdAt;
-          this.comments.push({
-            id: change.doc.id,
-            context: change.doc.data().context,
-            likedCount: change.doc.data().likedCount,
-            like: data.exists,
-            createdAt:
-              createdAtInt !== null ? createdAtInt.toDate() : createdAtInt,
-            userId: change.doc.data().userId,
-            imgUrl: change.doc.data().imgUrl,
-            replyMode: change.doc.data().replyMode,
-            replyContext: change.doc.data().replyContext,
-          });
-        });
-    },
-    modifyComments(change) {
-      const index = this.comments.findIndex(
-        (item) => item.id === change.doc.id
-      );
-      if (index !== -1) {
+      if (this.stock === "user") {
         this.db
-          .collection("users")
-          .doc(this.user.id)
-          .collection("likeComments")
-          .doc(change.doc.id)
-          .get()
-          .then((data) => {
-            const createdAtInt = change.doc.data().createdAt;
-            this.comments.splice(index, 1, {
-              id: change.doc.id,
-              context: change.doc.data().context,
-              likedCount: change.doc.data().likedCount,
-              like: data.exists,
-              createdAt:
-                createdAtInt !== null ? createdAtInt.toDate() : createdAtInt,
-              userId: change.doc.data().userId,
-              imgUrl: change.doc.data().imgUrl,
-              replyMode: change.doc.data().replyMode,
-              replyContext: change.doc.data().replyContext,
-            });
+          .ref("comments")
+          .orderByChild("userId")
+          .startAt(this.user.id)
+          .endAt(this.user.id)
+          .on("value", (snapshot) => {
+            this.comments = snapshot.val();
+            console.log(snapshot.val());
+          });
+      } else {
+        this.db
+          .ref("comments")
+          .orderByChild("stock")
+          .startAt(this.stock)
+          .endAt(this.stock)
+          .limitToLast(this.commentListLimit)
+          .on("value", (snapshot) => {
+            this.comments = snapshot.val();
+            console.log(snapshot.val());
           });
       }
     },
-    createdAtDescSort(a, b) {
-      if (a.doc.data().createdAt < b.doc.data().createdAt) {
-        return -1;
-      } else {
-        return 1;
-      }
-    },
-    setReplyMode(context) {
-      this.$emit("setReplyMode", context);
+    setReplyMode(context, imgUrl) {
+      this.$emit("setReplyMode", context, imgUrl);
     },
     releaseReplyMode() {
       this.$emit("releaseReplyMode");
+    },
+    like(id, count) {
+      console.log(id);
+      const updates = {};
+      updates[`/comments/${id}/likedCount`] = count + 1;
+      updates[`/comments/${id}/likedUsers/${this.user.id}`] = true;
+      this.db.ref().update(updates);
+    },
+    unlike(id, count) {
+      const updates = {};
+      updates[`/comments/${id}/likedCount`] = count - 1;
+      this.db.ref().update(updates);
+      this.db.ref(`/comments/${id}/likedUsers/${this.user.id}`).remove();
+    },
+    scrollBottom() {
+      const comments = document.getElementById("comments");
+      comments.scrollTop = comments.scrollHeight - comments.clientHeight;
+    },
+    getStrFromMs(createdAt) {
+      const createdAtDate = new Date(createdAt);
+      return (
+        ("0" + (createdAtDate.getMonth() + 1)).slice(-2) +
+        "/" +
+        createdAtDate.getDate() +
+        " " +
+        createdAtDate.getHours() +
+        ":" +
+        ("0" + createdAtDate.getMinutes()).slice(-2)
+      );
     },
   },
 };
@@ -228,7 +234,7 @@ export default {
   position: fixed;
   top: 50px;
   left: 10px;
-  width: 30%;
+  width: 35%;
   height: 90%;
   overflow-y: scroll;
   word-wrap: break-word;

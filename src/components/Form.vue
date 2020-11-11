@@ -26,16 +26,7 @@
         <div
           v-if="isValidContext"
           id="post-comment-button"
-          @click="
-            postComment(
-              db,
-              userId,
-              stock,
-              commentContext,
-              replyMode,
-              replyContext
-            )
-          "
+          @click="postComment()"
           class="material-icons text-primary m-1"
           ref="file"
         >
@@ -79,7 +70,7 @@ export default {
   },
   data() {
     return {
-      db: firebase.firestore(),
+      db: firebase.database(),
       st: firebase.storage(),
       commentContext: "",
       imageData: "",
@@ -94,14 +85,19 @@ export default {
           top: `${document.documentElement.clientHeight / 2}px`,
         },
       },
+      maxImgMegaByte: 2,
+      maxContextLength: 300,
     };
   },
 
   methods: {
     postComment() {
-      const docId = this.db.collection("comments").doc().id;
+      const commentsRef = this.db.ref("comments");
+      const docId = commentsRef.push().key;
+
       const imgs = document.getElementById("post-img");
       const ta = document.getElementById("ta");
+      console.log(this.reply.imgUrl);
       if (imgs.files.length > 0) {
         for (let file of imgs.files) {
           this.st
@@ -115,15 +111,16 @@ export default {
                 .getDownloadURL()
                 .then((url) => {
                   //console.log(url);
-                  this.db.collection("comments").doc(docId).set({
+                  commentsRef.child(docId).set({
                     userId: this.user.id,
                     stock: this.stock,
                     context: this.commentContext,
                     likedCount: 0,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    createdAt: firebase.database.ServerValue.TIMESTAMP,
+                    updatedAt: firebase.database.ServerValue.TIMESTAMP,
                     replyMode: this.reply.mode,
                     replyContext: this.reply.context,
+                    replyImgUrl: this.reply.imgUrl,
                     imgUrl: url,
                   });
                   //console.log(imgs.files);
@@ -143,16 +140,17 @@ export default {
             });
         }
       } else {
-        this.db.collection("comments").doc(docId).set({
+        commentsRef.child(docId).set({
           userId: this.user.id,
           stock: this.stock,
           context: this.commentContext,
           likedCount: 0,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdAt: firebase.database.ServerValue.TIMESTAMP,
+          updatedAt: firebase.database.ServerValue.TIMESTAMP,
           replyMode: this.reply.mode,
           replyContext: this.reply.context,
-          imgUrl: null,
+          replyImgUrl: this.reply.imgUrl,
+          imgUrl: "",
         });
         //console.log(imgs.files);
         this.commentContext = "";
@@ -188,9 +186,12 @@ export default {
     checkValidContext() {
       const imgs = document.getElementById("post-img");
       this.isValidContext =
-        imgs.files.length > 0 || this.commentContext.trim() !== "";
+        this.commentContext.length < this.maxContextLength &&
+        ((imgs.files.length > 0 &&
+          imgs.files[0].size / 1024 ** 2 < this.maxImgMegaByte) ||
+          this.commentContext.trim() !== "");
       //console.log(imgs);
-      //console.log(imgs.files);
+      console.log(imgs.files);
       //console.log(imgs.value);
     },
     onFileChange(e) {

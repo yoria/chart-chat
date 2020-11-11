@@ -1,0 +1,41 @@
+{
+  "rules": {
+    "comments": {
+      ".write": "auth !== null",
+      ".read": "auth !== null",
+      "$comment_id": {
+        ".validate": "newData.child('context').val().length < 200 && (newData.child('context').val().length > 1 || newData.child('imgUrl').val() !== '')",
+        "context": {
+          ".validate": "newData.isString()"
+        },
+        "imgUrl": {
+          ".validate": "newData.isString()"
+        },
+        "likedCount": {
+          ".validate": "newData.isNumber()"
+        },
+        "replyMode": {
+          ".validate": "newData.isBoolean()"
+        },
+        "replyContext": {
+          ".validate": "newData.isString()"
+        },
+        "replyImgUrl": {
+          ".validate": "newData.isString()"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now"
+        },
+        "updatedAt": {
+          ".validate": "newData.isNumber() && newData.val() <= now"
+        },
+        "userId": {
+          ".validate": "newData.isString()"
+        },
+        "stock": {
+          ".validate": "newData.isString()"
+        }
+      }
+    }
+  }
+}
