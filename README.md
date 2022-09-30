@@ -26,3 +26,6 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 # Go to site
 1. https://chart-chat.web.app/
 2. https://chart-chat.firebaseapp.com/
+
+## type
+Web App
