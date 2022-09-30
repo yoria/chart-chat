@@ -26,7 +26,7 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 # type
 Web App (Webアプリケーション)
 
-#対応デバイス
+# 対応デバイス
 PC
 スマートフォン
 
@@ -40,5 +40,3 @@ PC
 
 # dependencies (依存関係)
 Google社が提供しているFirebaseというサービスを使いサイトを構築しました
-
-#
