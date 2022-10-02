@@ -13,10 +13,10 @@ PC
 2. https://chart-chat.firebaseapp.com/
 
 # Technical Specification (技術仕様)
-HTML CSS
-javaScript (Vue.js)
-Node.js
-Firebase
+HTML CSS  
+javaScript (Vue.js)  
+Node.js  
+Firebase  
 
 
 # Dependencies (依存関係)
