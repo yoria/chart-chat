@@ -15,7 +15,7 @@ Web App (Webアプリケーション)
 # Technical Specification (技術仕様)
 - HTML CSS  
 - javaScript (Vue.js)  
- Node.js  
+- Node.js  
 - Firebase  
 
 
