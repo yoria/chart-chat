@@ -10,7 +10,7 @@ Web App (Webアプリケーション)
 
 # Go to site (Webサイトのリンク)
 1. https://chart-chat.web.app/
-2. https://chart-chat.firebaseapp.com/
+2. https://chart-chat.firebaseapp.com/  
 今でも動きます！
 
 # Technical Specification (技術仕様)
