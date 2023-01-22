@@ -5,23 +5,23 @@
 Web App (Webアプリケーション)
 
 # 対応デバイス
-PC  
-スマートフォン  
+- PC  
+- スマートフォン  
 
 # Go to site (Webサイトのリンク)
 1. https://chart-chat.web.app/
 2. https://chart-chat.firebaseapp.com/
 
 # Technical Specification (技術仕様)
-HTML CSS  
-javaScript (Vue.js)  
-Node.js  
-Firebase  
+- HTML CSS  
+- javaScript (Vue.js)  
+ Node.js  
+- Firebase  
 
 
 # Dependencies (依存関係)
-Google Firebase
-TradingView API
+- Google Firebase
+- TradingView API
 
 
 ## Project setup
